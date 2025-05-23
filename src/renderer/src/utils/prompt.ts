@@ -1,4 +1,5 @@
 import { MCPTool } from '@renderer/types'
+import dayjs from 'dayjs'
 
 export const SYSTEM_PROMPT = `In this environment you have access to a set of tools you can use to answer the user's question. \
 You can use one tool per message, and will receive the result of that tool use in the user's response. You use tools step-by-step to accomplish a given task, with each tool use informed by the result of the previous tool use.
@@ -148,10 +149,12 @@ ${availableTools}
 }
 
 export const buildSystemPrompt = (userSystemPrompt: string, tools?: MCPTool[]): string => {
+  const currentTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
   if (tools && tools.length > 0) {
     return SYSTEM_PROMPT.replace('{{ USER_SYSTEM_PROMPT }}', userSystemPrompt)
       .replace('{{ TOOL_USE_EXAMPLES }}', ToolUseExamples)
       .replace('{{ AVAILABLE_TOOLS }}', AvailableTools(tools))
+      .replace('{{CURRENT_TIME}}', currentTime)
   }
 
   return userSystemPrompt
