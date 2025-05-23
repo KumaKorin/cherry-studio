@@ -157,5 +157,5 @@ export const buildSystemPrompt = (userSystemPrompt: string, tools?: MCPTool[]): 
       .replace('{{CURRENT_TIME}}', currentTime)
   }
 
-  return userSystemPrompt
+  return userSystemPrompt.replace('{{CURRENT_TIME}}', currentTime)
 }
