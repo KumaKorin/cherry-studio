@@ -173,7 +173,7 @@ class FileStorage {
     const stats = await fs.promises.stat(destPath)
     const fileType = getFileType(ext)
 
-    const fileMetadata: FileType = {
+    return {
       id: uuid,
       origin_name,
       name: uuid + ext,
@@ -184,8 +184,6 @@ class FileStorage {
       type: fileType,
       count: 1
     }
-
-    return fileMetadata
   }
 
   public getFile = async (_: Electron.IpcMainInvokeEvent, filePath: string): Promise<FileType | null> => {
@@ -197,7 +195,7 @@ class FileStorage {
     const ext = path.extname(filePath)
     const fileType = getFileType(ext)
 
-    const fileInfo: FileType = {
+    return {
       id: uuidv4(),
       origin_name: path.basename(filePath),
       name: path.basename(filePath),
@@ -208,8 +206,6 @@ class FileStorage {
       type: fileType,
       count: 1
     }
-
-    return fileInfo
   }
 
   public deleteFile = async (_: Electron.IpcMainInvokeEvent, id: string): Promise<void> => {
@@ -240,8 +236,7 @@ class FileStorage {
     if (!fs.existsSync(this.tempDir)) {
       fs.mkdirSync(this.tempDir, { recursive: true })
     }
-    const tempFilePath = path.join(this.tempDir, `temp_file_${uuidv4()}_${fileName}`)
-    return tempFilePath
+    return path.join(this.tempDir, `temp_file_${uuidv4()}_${fileName}`)
   }
 
   public writeFile = async (
@@ -294,7 +289,7 @@ class FileStorage {
 
       await fs.promises.writeFile(destPath, buffer)
 
-      const fileMetadata: FileType = {
+      return {
         id: uuid,
         origin_name: uuid + ext,
         name: uuid + ext,
@@ -305,8 +300,6 @@ class FileStorage {
         type: getFileType(ext),
         count: 1
       }
-
-      return fileMetadata
     } catch (error) {
       logger.error('[FileStorage] Failed to save base64 image:', error)
       throw error
@@ -477,7 +470,7 @@ class FileStorage {
       const stats = await fs.promises.stat(destPath)
       const fileType = getFileType(ext)
 
-      const fileMetadata: FileType = {
+      return {
         id: uuid,
         origin_name: filename,
         name: uuid + ext,
@@ -488,8 +481,6 @@ class FileStorage {
         type: fileType,
         count: 1
       }
-
-      return fileMetadata
     } catch (error) {
       logger.error('[FileStorage] Download file error:', error)
       throw error

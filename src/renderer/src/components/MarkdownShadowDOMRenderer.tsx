@@ -31,11 +31,9 @@ const ShadowDOMRenderer: React.FC<Props> = ({ children }) => {
 
     if (markdownStyleSheet) {
       const style = document.createElement('style')
-      const cssRules = Array.from(markdownStyleSheet.cssRules)
+      style.textContent = Array.from(markdownStyleSheet.cssRules)
         .map((rule) => rule.cssText)
         .join('\n')
-
-      style.textContent = cssRules
       shadow.appendChild(style)
     }
 

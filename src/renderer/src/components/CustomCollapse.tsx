@@ -56,6 +56,7 @@ const CustomCollapse: FC<CustomCollapseProps> = ({
         }
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const defaultCollapseItemStyles = {
     header: getHeaderStyle(),
     body: {
@@ -66,7 +67,7 @@ const CustomCollapse: FC<CustomCollapseProps> = ({
   const collapseStyle = merge({}, defaultCollapseStyle, style)
   const collapseItemStyles = useMemo(() => {
     return merge({}, defaultCollapseItemStyles, styles)
-  }, [activeKeys])
+  }, [defaultCollapseItemStyles, styles])
 
   return (
     <Collapse

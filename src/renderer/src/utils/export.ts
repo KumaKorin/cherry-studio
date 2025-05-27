@@ -424,7 +424,7 @@ export const exportMarkdownToObsidian = async (attributes: any) => {
       isMarkdownFile = true
     }
 
-    let filePath = ''
+    let filePath: string
 
     // 如果是.md文件，直接使用该文件路径
     if (isMarkdownFile) {

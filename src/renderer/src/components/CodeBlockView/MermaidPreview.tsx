@@ -43,8 +43,7 @@ const MermaidPreview: React.FC<Props> = ({ children, setTools }) => {
       const { svg } = await mermaid.render(diagramId, children, mermaidRef.current)
 
       // 避免不可见时产生 undefined 和 NaN
-      const fixedSvg = svg.replace(/translate\(undefined,\s*NaN\)/g, 'translate(0, 0)')
-      mermaidRef.current.innerHTML = fixedSvg
+      mermaidRef.current.innerHTML = svg.replace(/translate\(undefined,\s*NaN\)/g, 'translate(0, 0)')
 
       // 没有语法错误时清除错误记录和定时器
       setError(null)

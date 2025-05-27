@@ -47,7 +47,7 @@ export function getContextCount(assistant: Assistant, messages: Message[]) {
 
   const clearIndex = _messages.findLastIndex((message) => message.type === 'clear')
 
-  let currentContextCount = 0
+  let currentContextCount: number
   if (clearIndex === -1) {
     currentContextCount = _messages.length
   } else {

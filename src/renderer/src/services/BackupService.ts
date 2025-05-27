@@ -25,7 +25,7 @@ export async function restore() {
 
   if (file) {
     try {
-      let data: Record<string, any> = {}
+      let data: Record<string, any>
 
       // zip backup file
       if (file?.fileName.endsWith('.zip')) {
@@ -73,8 +73,9 @@ export async function reset() {
   })
 }
 
-// 备份到 webdav
 /**
+ * @param showMessage
+ * @param customFileName
  * @param autoBackupProcess
  * if call in auto backup process, not show any message, any error will be thrown
  */

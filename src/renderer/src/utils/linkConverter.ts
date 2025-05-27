@@ -279,7 +279,7 @@ export function convertLinksToOpenRouter(text: string, resetCounter = false): st
   buffer = buffer.substring(safePoint)
 
   // Process the safe buffer to handle complete links
-  const result = safeBuffer.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+  return safeBuffer.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
     // Only convert link if the text looks like a host/URL
     if (isHost(text)) {
       // Check if this URL has been seen before
@@ -295,8 +295,6 @@ export function convertLinksToOpenRouter(text: string, resetCounter = false): st
     // Keep original link format if the text doesn't look like a host
     return match
   })
-
-  return result
 }
 
 /**

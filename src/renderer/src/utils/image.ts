@@ -38,8 +38,7 @@ export async function captureDiv(divRef: React.RefObject<HTMLDivElement>) {
   if (divRef.current) {
     try {
       const canvas = await htmlToImage.toCanvas(divRef.current)
-      const imageData = canvas.toDataURL('image/png')
-      return imageData
+      return canvas.toDataURL('image/png')
     } catch (error) {
       console.error('Error capturing div:', error)
       return Promise.reject()

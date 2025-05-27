@@ -185,7 +185,7 @@ export abstract class BaseOpenAIProvider extends BaseProvider {
     }
 
     const openAI = getStoreSetting('openAI') as any
-    let serviceTier = 'auto' as OpenAIServiceTier
+    let serviceTier: OpenAIServiceTier
 
     if (openAI && openAI?.serviceTier === 'flex') {
       if (isSupportedFlexServiceTier(model)) {
@@ -215,7 +215,7 @@ export abstract class BaseOpenAIProvider extends BaseProvider {
     const openAI = getStoreSetting('openAI') as any
     const summaryText = (openAI?.summaryText as OpenAISummaryText) || 'off'
 
-    let summary: string | undefined = undefined
+    let summary: string | undefined
 
     if (summaryText === 'off' || model.id.includes('o1-pro')) {
       summary = undefined

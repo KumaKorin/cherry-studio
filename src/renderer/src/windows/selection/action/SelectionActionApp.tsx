@@ -54,7 +54,7 @@ const SelectionActionApp: FC = () => {
       window.removeEventListener('focus', handleWindowFocus)
       window.removeEventListener('blur', handleWindowBlur)
     }
-    // don't need any dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -114,9 +114,6 @@ const SelectionActionApp: FC = () => {
     window.api.selection.closeActionWindow()
   }
 
-  /**
-   * @param pinned - if undefined, toggle the pinned state, otherwise force set the pinned state
-   */
   const togglePin = () => {
     setIsPinned(!isPinned)
     window.api.selection.pinActionWindow(!isPinned)
@@ -152,14 +149,8 @@ const SelectionActionApp: FC = () => {
     if (!contentElementRef.current) return
 
     const { scrollTop, scrollHeight, clientHeight } = contentElementRef.current
-    const isAtBottom = Math.abs(scrollHeight - scrollTop - clientHeight) < 24
-
     // Only update isAutoScrollEnabled if user is at bottom
-    if (isAtBottom) {
-      isAutoScrollEnabled.current = true
-    } else {
-      isAutoScrollEnabled.current = false
-    }
+    isAutoScrollEnabled.current = Math.abs(scrollHeight - scrollTop - clientHeight) < 24
   }
 
   //we don't need to render the component if action is not set
@@ -237,7 +228,7 @@ const WindowFrame = styled.div<{ $opacity: number }>`
   margin: 2px;
   background-color: var(--color-background);
   border: 1px solid var(--color-border);
-  box-shadow: 0px 0px 2px var(--color-text-3);
+  box-shadow: 0 0 2px var(--color-text-3);
   border-radius: 8px;
   overflow: hidden;
   box-sizing: border-box;

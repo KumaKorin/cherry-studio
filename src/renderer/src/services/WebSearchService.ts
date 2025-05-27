@@ -96,6 +96,7 @@ class WebSearchService {
    * @public
    * @param provider 搜索提供商
    * @param query 搜索查询
+   * @param httpOptions
    * @returns 搜索响应
    */
   public async search(

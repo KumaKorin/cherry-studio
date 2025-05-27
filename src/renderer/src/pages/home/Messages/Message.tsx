@@ -69,7 +69,6 @@ const MessageItem: FC<Props> = ({
   const handleEditSave = useCallback(
     async (blocks: MessageBlock[]) => {
       try {
-        console.log('after save blocks', blocks)
         await editMessageBlocks(message.id, blocks)
         stopEditing()
       } catch (error) {

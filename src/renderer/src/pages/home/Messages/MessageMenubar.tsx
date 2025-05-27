@@ -94,7 +94,7 @@ const MessageMenubar: FC<Props> = (props) => {
       const currentMessageId = message.id // from props
       const latestMessageEntity = store.getState().messages.entities[currentMessageId]
 
-      let contentToCopy = ''
+      let contentToCopy: string
       if (latestMessageEntity) {
         contentToCopy = getMainTextContent(latestMessageEntity as Message)
       } else {

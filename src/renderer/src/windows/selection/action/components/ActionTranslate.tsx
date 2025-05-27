@@ -76,7 +76,7 @@ const ActionTranslate: FC<Props> = ({ action, scrollToBottom }) => {
     } finally {
       translatingRef.current = false
     }
-  }, [action, targetLanguage, translateModel])
+  }, [action.selectedText, scrollToBottom, t, targetLanguage, translateModel])
 
   useEffect(() => {
     runAsyncFunction(async () => {

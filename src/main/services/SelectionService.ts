@@ -627,7 +627,6 @@ export class SelectionService {
   /**
    * Handle mouse wheel events to hide toolbar
    * Hides toolbar when user scrolls
-   * @param data Mouse wheel event data
    */
   private handleMouseWheelHide = () => {
     this.hideToolbar()

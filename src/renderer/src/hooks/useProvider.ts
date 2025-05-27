@@ -67,14 +67,12 @@ export function useProviderByAssistant(assistant: Assistant) {
 
 // Listen for server changes from main process
 window.electron.ipcRenderer.on(IpcChannel.Provider_AddKey, (_, data) => {
-  console.log('Received provider key data:', data)
   const { id, apiKey } = data
   // for now only suppor tokenflux, but in the future we can support more
   if (id === 'tokenflux') {
     if (apiKey) {
       store.dispatch(updateProvider({ id, apiKey } as Provider))
       window.message.success('Provider API key updated')
-      console.log('Provider API key updated:', apiKey)
     }
   }
 })

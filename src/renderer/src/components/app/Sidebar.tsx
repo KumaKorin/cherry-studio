@@ -210,8 +210,7 @@ const SidebarOpenedMinappTabs: FC = () => {
     const container = document.querySelector('.TabsContainer') as HTMLElement
     const activeIcon = document.querySelector('.TabsContainer .opened-active') as HTMLElement
 
-    let indicatorTop = 0,
-      indicatorRight = 0
+    let indicatorTop: number, indicatorRight: number
     if (minappShow && activeIcon && container) {
       indicatorTop = activeIcon.offsetTop + activeIcon.offsetHeight / 2 - 4 // 4 is half of the indicator's height (8px)
       indicatorRight = 0

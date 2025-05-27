@@ -126,7 +126,7 @@ export const builtinMCPServers: MCPServer[] = [
 
 /**
  * Utility function to add servers to the MCP store during app initialization
- * @param servers Array of MCP servers to add
+ * @param existingServers
  * @param dispatch Redux dispatch function
  */
 export const initializeMCPServers = (existingServers: MCPServer[], dispatch: (action: any) => void): void => {

@@ -68,7 +68,7 @@ const ActionGeneral: FC<Props> = React.memo(({ action, scrollToBottom }) => {
     topicRef.current = getDefaultTopic(currentAssistant.id)
 
     // Initialize prompt content
-    let userContent = ''
+    let userContent: string
     switch (action.id) {
       case 'summary':
         userContent =
@@ -197,7 +197,7 @@ const ActionGeneral: FC<Props> = React.memo(({ action, scrollToBottom }) => {
       setError(err instanceof Error ? err.message : 'An error occurred')
       console.error('Error fetching result:', err)
     }
-  }, [])
+  }, [scrollToBottom])
 
   useEffect(() => {
     if (assistantRef.current && topicRef.current) {
