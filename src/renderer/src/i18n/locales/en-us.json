@@ -1784,10 +1784,6 @@
       "input.placeholder": "Enter text to translate",
       "output.placeholder": "Translation",
       "processing": "Translation in progress...",
-      "scroll_sync.disable": "Disable synced scroll",
-      "scroll_sync.enable": "Enable synced scroll",
-      "bidirectional.disable": "Disable bidirectional translation",
-      "bidirectional.enable": "Enable bidirectional translation",
       "language.same": "Source and target languages are the same",
       "language.not_pair": "Source language is different from the set language",
       "settings": {
@@ -1795,6 +1791,7 @@
         "model": "Model Settings",
         "model_desc": "Model used for translation service",
         "bidirectional": "Bidirectional Translation Settings",
+        "bidirectional_tip": "When enabled, only bidirectional translation between source and target languages is supported",
         "scroll_sync": "Scroll Sync Settings"
       },
       "title": "Translation",

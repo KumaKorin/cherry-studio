@@ -1784,10 +1784,6 @@
       "input.placeholder": "翻訳するテキストを入力",
       "output.placeholder": "翻訳",
       "processing": "翻訳中...",
-      "scroll_sync.disable": "關閉滾動同步",
-      "scroll_sync.enable": "開啟滾動同步",
-      "bidirectional.disable": "双方向翻訳を無効にする",
-      "bidirectional.enable": "双方向翻訳を有効にする",
       "language.same": "ソース言語と目標言語が同じです",
       "language.not_pair": "ソース言語が設定された言語と異なります",
       "settings": {
@@ -1795,6 +1791,7 @@
         "model": "モデル設定",
         "model_desc": "翻訳サービスで使用されるモデル",
         "bidirectional": "双方向翻訳設定",
+        "bidirectional_tip": "有効にすると、ソース言語と目標言語間の双方向翻訳のみがサポートされます",
         "scroll_sync": "スクロール同期設定"
       },
       "title": "翻訳",

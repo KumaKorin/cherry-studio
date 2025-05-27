@@ -19,12 +19,12 @@ import {
   getTargetLanguageForBidirectional,
   isLanguageInPair
 } from '@renderer/utils/translate'
-import { Button, Divider, Empty, Flex, Modal, Popconfirm, Select, Space, Switch, Tooltip } from 'antd'
+import { Button, Empty, Flex, Modal, Popconfirm, Select, Space, Switch, Tooltip } from 'antd'
 import TextArea, { TextAreaRef } from 'antd/es/input/TextArea'
 import dayjs from 'dayjs'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { find, isEmpty, sortBy } from 'lodash'
-import { Settings2, TriangleAlert } from 'lucide-react'
+import { HelpCircle, Settings2, TriangleAlert } from 'lucide-react'
 import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
@@ -95,6 +95,7 @@ const TranslateSettings: FC<{
       title={<div style={{ fontSize: 16 }}>{t('translate.settings.title')}</div>}
       open={visible}
       onCancel={onClose}
+      centered={true}
       footer={[
         <Button key="cancel" onClick={onClose}>
           {t('common.cancel')}
@@ -135,17 +136,28 @@ const TranslateSettings: FC<{
           </div>
         </div>
 
-        <Divider style={{ margin: '8px 0' }} />
+        <div>
+          <Flex align="center" justify="space-between">
+            <div style={{ fontWeight: 500 }}>{t('translate.settings.scroll_sync')}</div>
+            <Switch checked={isScrollSyncEnabled} onChange={setIsScrollSyncEnabled} />
+          </Flex>
+        </div>
 
         <div>
-          <div style={{ marginBottom: 8, fontWeight: 500 }}>{t('translate.settings.bidirectional')}</div>
+          <Flex align="center" justify="space-between" style={{ marginBottom: 8 }}>
+            <div style={{ fontWeight: 500 }}>
+              <HStack alignItems="center" gap={5}>
+                {t('translate.settings.bidirectional')}
+                <Tooltip title={t('translate.settings.bidirectional_tip')}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <HelpCircle size={14} style={{ color: 'var(--color-text-3)' }} />
+                  </span>
+                </Tooltip>
+              </HStack>
+            </div>
+            <Switch checked={isBidirectional} onChange={setIsBidirectional} />
+          </Flex>
           <Space direction="vertical" style={{ width: '100%' }}>
-            <Flex align="center" justify="space-between">
-              <span>
-                {isBidirectional ? t('translate.bidirectional.disable') : t('translate.bidirectional.enable')}
-              </span>
-              <Switch checked={isBidirectional} onChange={setIsBidirectional} />
-            </Flex>
             {isBidirectional && (
               <Flex align="center" justify="space-between" gap={10}>
                 <Select
@@ -184,16 +196,6 @@ const TranslateSettings: FC<{
               </Flex>
             )}
           </Space>
-        </div>
-
-        <Divider style={{ margin: '8px 0' }} />
-
-        <div>
-          <div style={{ marginBottom: 8, fontWeight: 500 }}>{t('translate.settings.scroll_sync')}</div>
-          <Flex align="center" justify="space-between">
-            <span>{isScrollSyncEnabled ? t('translate.scroll_sync.disable') : t('translate.scroll_sync.enable')}</span>
-            <Switch checked={isScrollSyncEnabled} onChange={setIsScrollSyncEnabled} />
-          </Flex>
         </div>
       </Flex>
     </Modal>
