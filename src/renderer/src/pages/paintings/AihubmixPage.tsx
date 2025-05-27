@@ -290,7 +290,7 @@ const AihubmixPage: FC<{ Options: string[] }> = ({ Options }) => {
             setAbortController(null)
           }
         } else {
-          let requestData: any
+          let requestData: any = {}
           if (painting.model === 'gpt-image-1') {
             requestData = {
               prompt,

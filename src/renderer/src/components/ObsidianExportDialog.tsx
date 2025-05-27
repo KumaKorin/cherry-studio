@@ -221,7 +221,7 @@ const ObsidianExportDialog: React.FC<ObsidianExportDialogProps> = ({
     }
 
     //构建content 并复制到粘贴板
-    let content: string
+    let content = ''
     if (state.processingMethod !== '3') {
       content = `\n---\n${markdown}`
     } else {

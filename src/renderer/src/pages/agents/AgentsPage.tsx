@@ -41,7 +41,7 @@ const AgentsPage: FC = () => {
   }, [systemAgents, userAgents])
 
   const filteredAgents = useMemo(() => {
-    let agents: Agent[]
+    let agents: Agent[] = []
 
     if (search.trim()) {
       const uniqueAgents = new Map<string, Agent>()

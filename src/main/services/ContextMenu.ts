@@ -18,7 +18,7 @@ class ContextMenu {
   private createInspectMenuItems(w: Electron.BrowserWindow): MenuItemConstructorOptions[] {
     const locale = locales[configManager.getLanguage()]
     const { common } = locale.translation
-    return [
+    const template: MenuItemConstructorOptions[] = [
       {
         id: 'inspect',
         label: common.inspect,
@@ -28,6 +28,8 @@ class ContextMenu {
         enabled: true
       }
     ]
+
+    return template
   }
 
   private createEditMenuItems(properties: Electron.ContextMenuParams): MenuItemConstructorOptions[] {

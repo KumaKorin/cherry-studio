@@ -13,7 +13,7 @@ interface CitationTooltipProps {
 }
 
 const CitationTooltip: React.FC<CitationTooltipProps> = ({ children, citation }) => {
-  let hostname: string
+  let hostname = ''
   try {
     hostname = new URL(citation.url).hostname
   } catch {
