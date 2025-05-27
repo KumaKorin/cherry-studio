@@ -298,7 +298,7 @@ const fetchAndProcessAssistantResponseImpl = async (
 
     const allMessagesForTopic = selectMessagesForTopic(getState(), topicId)
 
-    let messagesForContext: Message[]
+    let messagesForContext: Message[] = []
     const userMessageId = assistantMessage.askId
     const userMessageIndex = allMessagesForTopic.findIndex((m) => m?.id === userMessageId)
 

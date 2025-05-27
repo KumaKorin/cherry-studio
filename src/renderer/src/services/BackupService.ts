@@ -25,7 +25,7 @@ export async function restore() {
 
   if (file) {
     try {
-      let data: Record<string, any>
+      let data: Record<string, any> = {}
 
       // zip backup file
       if (file?.fileName.endsWith('.zip')) {
