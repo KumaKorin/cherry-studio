@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 
 export function useNutstoreSSO() {
-  const nutstoreSSOHandler = useCallback(() => {
+  return useCallback(() => {
     return new Promise<string>((resolve, reject) => {
       const removeListener = window.api.protocol.onReceiveData(async (data) => {
         try {
@@ -19,6 +19,4 @@ export function useNutstoreSSO() {
       })
     })
   }, [])
-
-  return nutstoreSSOHandler
 }

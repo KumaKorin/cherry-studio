@@ -125,7 +125,7 @@ const ThinkingButton: FC<Props> = ({ ref, model, assistant, ToolbarButton }): Re
     [updateAssistantSettings]
   )
 
-  const baseOptions = useMemo(() => {
+  const panelItems = useMemo(() => {
     // 使用表中定义的选项创建UI选项
     return supportedOptions.map((option) => ({
       level: option,
@@ -136,8 +136,6 @@ const ThinkingButton: FC<Props> = ({ ref, model, assistant, ToolbarButton }): Re
       action: () => onThinkingChange(option)
     }))
   }, [t, createThinkingIcon, currentReasoningEffort, supportedOptions, onThinkingChange])
-
-  const panelItems = baseOptions
 
   const openQuickPanel = useCallback(() => {
     quickPanel.open({

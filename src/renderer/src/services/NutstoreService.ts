@@ -48,12 +48,10 @@ export async function checkConnection() {
     return false
   }
 
-  const isSuccess = await window.api.backup.checkConnection({
+  return await window.api.backup.checkConnection({
     ...config,
     webdavPath: '/'
   })
-
-  return isSuccess
 }
 
 let autoSyncStarted = false

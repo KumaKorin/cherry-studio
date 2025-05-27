@@ -295,14 +295,13 @@ class ShikiStreamService {
     // 如果 Worker 可用，优先使用 Worker 处理
     if (this.hasWorkerHighlighter()) {
       try {
-        const result = await this.sendWorkerMessage({
+        return await this.sendWorkerMessage({
           type: 'highlight',
           callerId,
           chunk,
           language,
           theme
         })
-        return result
       } catch (error) {
         // Worker 处理失败，记录callerId并永久降级到主线程
         // FIXME: 这种情况如果出现，流式高亮语法状态就会丢失，目前用降级策略来处理

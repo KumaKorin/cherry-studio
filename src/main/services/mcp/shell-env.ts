@@ -95,8 +95,7 @@ function getLoginShellEnvironment(): Promise<Record<string, string>> {
           if (separatorIndex > 0) {
             // Ensure '=' is present and it's not the first character
             const key = trimmedLine.substring(0, separatorIndex)
-            const value = trimmedLine.substring(separatorIndex + 1)
-            env[key] = value
+            env[key] = trimmedLine.substring(separatorIndex + 1)
           }
         }
       })

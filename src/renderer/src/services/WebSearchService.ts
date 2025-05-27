@@ -8,6 +8,7 @@ import { addAbortController } from '@renderer/utils/abortController'
 import { ExtractResults } from '@renderer/utils/extract'
 import { fetchWebContents } from '@renderer/utils/fetch'
 import dayjs from 'dayjs'
+
 /**
  * 提供网络搜索相关功能的服务类
  */
@@ -86,9 +87,7 @@ class WebSearchService {
    */
   public getWebSearchProvider(providerId?: string): WebSearchProvider | undefined {
     const { providers } = this.getWebSearchState()
-    const provider = providers.find((provider) => provider.id === providerId)
-
-    return provider
+    return providers.find((provider) => provider.id === providerId)
   }
 
   /**

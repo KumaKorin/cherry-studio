@@ -10,8 +10,7 @@ export const DEFAULT_THEMES = ['one-light', 'material-theme-darker']
  * shiki 初始化器，避免并发问题
  */
 const shikiInitializer = new AsyncInitializer(async () => {
-  const shiki = await import('shiki')
-  return shiki
+  return await import('shiki')
 })
 
 /**
