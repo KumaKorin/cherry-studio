@@ -69,7 +69,7 @@ const AssistantModelSettings: FC<Props> = ({ assistant, updateAssistant, updateA
   ) => {
     const newParams = [...customParameters]
     if (field === 'type') {
-      let defaultValue: any
+      let defaultValue: any = ''
       switch (value) {
         case 'number':
           defaultValue = 0

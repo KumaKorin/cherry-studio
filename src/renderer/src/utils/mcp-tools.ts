@@ -521,7 +521,7 @@ export async function parseAndCallTools<R>(
   mcpTools?: MCPTool[]
 ): Promise<R[]> {
   const toolResults: R[] = []
-  let curToolResponses: MCPToolResponse[]
+  let curToolResponses: MCPToolResponse[] = []
   if (Array.isArray(content)) {
     curToolResponses = content
   } else {

@@ -173,7 +173,7 @@ class FileStorage {
     const stats = await fs.promises.stat(destPath)
     const fileType = getFileType(ext)
 
-    return {
+    const fileMetadata: FileType = {
       id: uuid,
       origin_name,
       name: uuid + ext,
@@ -184,6 +184,8 @@ class FileStorage {
       type: fileType,
       count: 1
     }
+
+    return fileMetadata
   }
 
   public getFile = async (_: Electron.IpcMainInvokeEvent, filePath: string): Promise<FileType | null> => {

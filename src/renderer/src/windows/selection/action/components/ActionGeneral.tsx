@@ -68,7 +68,7 @@ const ActionGeneral: FC<Props> = React.memo(({ action, scrollToBottom }) => {
     topicRef.current = getDefaultTopic(currentAssistant.id)
 
     // Initialize prompt content
-    let userContent: string
+    let userContent = ''
     switch (action.id) {
       case 'summary':
         userContent =
