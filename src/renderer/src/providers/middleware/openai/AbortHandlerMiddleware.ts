@@ -6,6 +6,17 @@ import type { CompletionsMiddleware } from '../middlewareTypes'
 const MIDDLEWARE_NAME = 'AbortHandlerMiddleware'
 
 export const AbortHandlerMiddleware: CompletionsMiddleware = () => (next) => async (context, params) => {
+  const isRecursiveCall = context._internal?.isRecursiveCall || false
+  const recursionDepth = context._internal?.recursionDepth || 0
+
+  console.log(`🔄 [${MIDDLEWARE_NAME}] Starting middleware. isRecursive: ${isRecursiveCall}, depth: ${recursionDepth}`)
+
+  // 在递归调用中，跳过 AbortController 的创建，直接使用已有的
+  if (isRecursiveCall) {
+    console.log(`🔄 [${MIDDLEWARE_NAME}] Recursive call detected, skipping AbortController creation`)
+    return next(context, params)
+  }
+
   console.log(`🔄 [${MIDDLEWARE_NAME}] Creating AbortController for request`)
 
   // 从context获取provider实例
@@ -29,13 +40,12 @@ export const AbortHandlerMiddleware: CompletionsMiddleware = () => (next) => asy
   // 将controller添加到params._internal中
   if (params._internal) params._internal.controller = abortController
   console.log('params._internal', params)
+
   try {
     const resultFromUpstream = await next(context, params)
 
     if (resultFromUpstream.stream && resultFromUpstream.stream instanceof ReadableStream) {
       const originalStream = resultFromUpstream.stream
-
-      // console.log(`🔄 [${MIDDLEWARE_NAME}] Setting up abort handling for stream`)
 
       // 检查abort状态
       if (abortSignal.aborted) {
@@ -61,7 +71,6 @@ export const AbortHandlerMiddleware: CompletionsMiddleware = () => (next) => asy
               }
 
               controller.enqueue(errorChunk)
-              controller.close()
               return
             }
 
@@ -78,39 +87,33 @@ export const AbortHandlerMiddleware: CompletionsMiddleware = () => (next) => asy
                 type: ChunkType.ERROR,
                 error
               }
-
               controller.enqueue(errorChunk)
             }
+            // 在流完全处理完成后清理 AbortController
+            console.log(`🔄 [${MIDDLEWARE_NAME}] Stream processing completed, cleaning up AbortController`)
+            cleanup()
           }
         })
       )
-
-      // 添加 abort 事件监听器，用于主动检测 abort
-      // abortSignal.addEventListener(
-      //   'abort',
-      //   () => {
-      //     console.log(`🔄 [${MIDDLEWARE_NAME}] Abort event triggered`)
-      //     // TransformStream 会在下次 transform 调用时检测到 aborted 状态
-      //   },
-      //   { once: true }
-      // )
 
       const adaptedResult: CompletionsOpenAIResult = {
         ...resultFromUpstream,
         stream: streamWithAbortHandler
       }
 
-      // console.log(`🔄 [${MIDDLEWARE_NAME}] Set up abort handling with TransformStream`)
+      console.log(
+        `🔄 [${MIDDLEWARE_NAME}] Set up abort handling with TransformStream, cleanup will be called when stream ends`
+      )
       return adaptedResult
     }
 
-    // 对于非流式响应，直接返回原始结果
-    // console.log(`🔄 [${MIDDLEWARE_NAME}] No stream to process or not a ReadableStream. Returning original result.`)
+    // 对于非流式响应，直接清理并返回原始结果
+    console.log(`🔄 [${MIDDLEWARE_NAME}] No stream to process, cleaning up immediately`)
+    cleanup()
     return resultFromUpstream
   } catch (error) {
     console.error(`🔄 [${MIDDLEWARE_NAME}] Error occurred, cleaning up:`, error)
-    throw error
-  } finally {
     cleanup()
+    throw error
   }
 }
