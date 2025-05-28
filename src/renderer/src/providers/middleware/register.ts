@@ -2,7 +2,7 @@
 import { createGenericLoggingMiddleware } from './common/LoggingMiddleware'
 import { AiProviderMiddlewareConfig } from './middlewareTypes'
 import { AbortHandlerMiddleware } from './openai/AbortHandlerMiddleware'
-import { FinalChunkConsumerAndNotifierMiddleware } from './openai/FinalChunkConsumerAndNotifierMiddleware'
+import FinalChunkConsumerMiddleware from './openai/FinalChunkConsumerMiddleware'
 import { McpToolChunkMiddleware } from './openai/McpToolChunkMiddleware'
 import { StreamAdapterMiddleware } from './openai/StreamAdapterMiddleware'
 import { TextChunkMiddleware } from './openai/TextChunkMiddleware'
@@ -16,7 +16,7 @@ const middlewareConfig: AiProviderMiddlewareConfig = {
   // Use the specialized logger for 'completions'. This array expects CompletionsMiddleware.
   completions: [
     // createCompletionsLoggingMiddleware(),
-    FinalChunkConsumerAndNotifierMiddleware,
+    FinalChunkConsumerMiddleware, // 最终消费者中间件 - 包含usage/metrics累加功能
     TransformParamsBeforeCompletions, // 参数转换中间件 - 最早执行，为其他中间件提供标准化参数
     AbortHandlerMiddleware,
     TextChunkMiddleware,
