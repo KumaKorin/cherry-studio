@@ -42,7 +42,9 @@ export abstract class BaseApiClient<TSdkInstance = any, TSdkParams = any, TRawCh
   }
 
   abstract getSdkInstance(): Promise<TSdkInstance> | TSdkInstance
+  // 在 CoreRequestToSdkParamsMiddleware中使用
   abstract getRequestTransformer(): RequestTransformer<TSdkParams>
+  // 在RawSdkChunkToGenericChunkMiddleware中使用
   abstract getResponseChunkTransformer(): ResponseChunkTransformer<TRawChunk, TResponseContext>
 
   // Optional tool conversion methods - implement if needed by the specific provider

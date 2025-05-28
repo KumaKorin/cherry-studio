@@ -24,9 +24,10 @@ export interface RequestTransformer<TSdkParams = any> {
 /**
  * 响应块转换器接口
  */
-export interface ResponseChunkTransformer<TRawChunk = any, TContext = any> {
-  transform(rawChunk: TRawChunk, context?: TContext): AsyncGenerator<GenericChunk>
-}
+export type ResponseChunkTransformer<TRawChunk = any, TContext = any> = (
+  rawChunk: TRawChunk,
+  context?: TContext
+) => AsyncGenerator<GenericChunk>
 
 export interface ResponseChunkTransformerContext {
   isStreaming: boolean

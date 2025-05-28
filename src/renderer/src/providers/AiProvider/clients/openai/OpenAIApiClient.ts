@@ -34,10 +34,7 @@ import { RequestTransformer, ResponseChunkTransformer, ResponseChunkTransformerC
 import { OpenAISdkParams, ReasoningEffortOptionalParams } from './types'
 
 // Define a context type if your response transformer needs it
-interface OpenAIResponseTransformContext extends ResponseChunkTransformerContext {
-  assistant: Assistant
-  model: Model
-}
+interface OpenAIResponseTransformContext extends ResponseChunkTransformerContext {}
 
 export class OpenAIApiClient extends BaseApiClient<
   OpenAI | AzureOpenAI,
@@ -142,100 +139,76 @@ export class OpenAIApiClient extends BaseApiClient<
     }
   }
 
+  // 在RawSdkChunkToGenericChunkMiddleware中使用
   getResponseChunkTransformer(): ResponseChunkTransformer<
     OpenAI.Chat.Completions.ChatCompletionChunk,
     OpenAIResponseTransformContext
   > {
-    return {
-      transform: async function* (chunk, context): AsyncGenerator<GenericChunk> {
-        const choice = chunk.choices[0]
+    return async function* (chunk, context): AsyncGenerator<GenericChunk> {
+      const choice = chunk.choices[0]
 
-        if (!choice) return
+      if (!choice) return
 
-        const { delta, finish_reason } = choice
+      const { delta } = choice
 
-        if (delta?.content) {
-          yield {
-            type: ChunkType.TEXT_DELTA,
-            text: delta.content
-          } as TextDeltaChunk
-        }
+      if (delta?.content) {
+        yield {
+          type: ChunkType.TEXT_DELTA,
+          text: delta.content
+        } as TextDeltaChunk
+      }
 
-        if (delta?.tool_calls && context?.isEnabledToolCalling && context.model) {
-          for (const toolCall of delta.tool_calls) {
-            if (toolCall.function?.name) {
-              // This is the start of a tool call
-              const mcpTool = openAIToolsToMcpTool(context.mcpTools || [], toolCall as any)
-              if (mcpTool) {
-                yield {
-                  type: ChunkType.MCP_TOOL_IN_PROGRESS, // Or a more specific tool start chunk
-                  responses: [
-                    {
-                      id: toolCall.id || '',
-                      toolCallId: toolCall.id,
-                      tool: mcpTool,
-                      arguments: {}, // Arguments will be accumulated
-                      status: 'pending'
-                    }
-                  ]
-                } as GenericChunk
-              }
+      if (delta?.tool_calls && context?.isEnabledToolCalling) {
+        for (const toolCall of delta.tool_calls) {
+          if (toolCall.function?.name) {
+            // This is the start of a tool call
+            const mcpTool = openAIToolsToMcpTool(context.mcpTools || [], toolCall as any)
+            if (mcpTool) {
+              yield {
+                type: ChunkType.MCP_TOOL_IN_PROGRESS, // Or a more specific tool start chunk
+                responses: [
+                  {
+                    id: toolCall.id || '',
+                    toolCallId: toolCall.id,
+                    tool: mcpTool,
+                    arguments: {}, // Arguments will be accumulated
+                    status: 'pending'
+                  }
+                ]
+              } as GenericChunk
             }
-            if (toolCall.function?.arguments) {
-              // Accumulate arguments. This part needs careful state management in the middleware
-              // For simplicity, we just signal that arguments are coming.
-              // Actual accumulation and parsing should happen in McpToolChunkMiddleware
-              const mcpTool = openAIToolsToMcpTool(context.mcpTools || [], toolCall as any)
-              if (mcpTool) {
-                yield {
-                  type: ChunkType.MCP_TOOL_IN_PROGRESS, // Or a more specific tool start chunk
-                  responses: [
-                    {
-                      id: toolCall.id || '',
-                      toolCallId: toolCall.id,
-                      tool: mcpTool,
-                      arguments: toolCall.function.arguments as any, // Cast to any, assuming middleware handles string fragments
-                      status: 'pending'
-                    }
-                  ]
-                } as GenericChunk
-              }
+          }
+          if (toolCall.function?.arguments) {
+            // Accumulate arguments. This part needs careful state management in the middleware
+            // For simplicity, we just signal that arguments are coming.
+            // Actual accumulation and parsing should happen in McpToolChunkMiddleware
+            const mcpTool = openAIToolsToMcpTool(context.mcpTools || [], toolCall as any)
+            if (mcpTool) {
+              yield {
+                type: ChunkType.MCP_TOOL_IN_PROGRESS, // Or a more specific tool start chunk
+                responses: [
+                  {
+                    id: toolCall.id || '',
+                    toolCallId: toolCall.id,
+                    tool: mcpTool,
+                    arguments: toolCall.function.arguments as any, // Cast to any, assuming middleware handles string fragments
+                    status: 'pending'
+                  }
+                ]
+              } as GenericChunk
             }
           }
         }
+      }
 
-        // Handle reasoning content (e.g. from OpenRouter DeepSeek-R1)
-        // @ts-ignore reasoning_content is not in standard OpenAI types but some providers use it
-        if (delta?.reasoning_content) {
+      // Handle reasoning content (e.g. from OpenRouter DeepSeek-R1)
+      // @ts-ignore reasoning_content is not in standard OpenAI types but some providers use it
+      if (delta?.reasoning_content || delta?.reasoning) {
+        yield {
+          type: ChunkType.THINKING_DELTA,
           // @ts-ignore reasoning_content is a non-standard field from some providers
-          yield { type: ChunkType.THINKING_DELTA, text: delta.reasoning_content } as ThinkingDeltaChunk
-        }
-
-        if (finish_reason) {
-          if (finish_reason === 'tool_calls' && context?.isEnabledToolCalling) {
-            // Already handled by delta.tool_calls, but we might send a specific completion chunk here if needed
-            // For now, McpToolChunkMiddleware will handle the completion of tool calls based on accumulated GenericChunks
-          }
-          // LLMWebSearchComplete for citations (annotations)
-          // @ts-ignore annotations is not in standard OpenAI types but some providers use it
-          if (choice.annotations && choice.annotations.length > 0 && context?.isEnabledWebSearch) {
-            yield {
-              type: ChunkType.LLM_WEB_SEARCH_COMPLETE,
-              llm_web_search: {
-                // @ts-ignore annotations is a non-standard field from some providers
-                results: choice.annotations,
-                source: 'openai_annotations' as any // Cast to any to bypass WebSearchSource type mismatch
-              }
-            } as GenericChunk
-          }
-          yield {
-            type: ChunkType.BLOCK_COMPLETE, // Or LLM_RESPONSE_COMPLETE
-            response: {
-              usage: chunk.usage ? { ...chunk.usage } : undefined
-              // metrics can be calculated by middleware if needed
-            }
-          } as GenericChunk
-        }
+          text: delta.reasoning_content || delta.reasoning
+        } as ThinkingDeltaChunk
       }
     }
   }
