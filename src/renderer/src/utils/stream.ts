@@ -11,10 +11,12 @@ export function readableStreamAsyncIterable<T>(stream: ReadableStream<T>): Async
   }
 }
 
-export function asyncGeneratorToReadableStream<T>(gen: AsyncGenerator<T>): ReadableStream<T> {
+export function asyncGeneratorToReadableStream<T>(gen: AsyncIterable<T>): ReadableStream<T> {
+  const iterator = gen[Symbol.asyncIterator]()
+
   return new ReadableStream<T>({
     async pull(controller) {
-      const { value, done } = await gen.next()
+      const { value, done } = await iterator.next()
       if (done) {
         controller.close()
       } else {

@@ -41,7 +41,7 @@ export const StreamAdapterMiddleware: CompletionsMiddleware = () => (next) => as
     // Adapt the AsyncIterable to an AsyncGenerator, then to a WHATWG ReadableStream.
     // The content will be raw OpenAI.Chat.Completions.ChatCompletionChunk objects.
     const whatwgReadableStream: ReadableStream<OpenAI.Chat.Completions.ChatCompletionChunk> =
-      asyncGeneratorToReadableStream(rawSdkChunkAdapter(rawSdkAsyncIterable))
+      asyncGeneratorToReadableStream(rawSdkAsyncIterable)
 
     const adaptedResult: CompletionsOpenAIResult = {
       ...originalResult,
