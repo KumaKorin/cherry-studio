@@ -109,7 +109,7 @@ export const TextChunkMiddleware: CompletionsMiddleware =
               accumulatedText += textDelta
               controller.enqueue({ type: ChunkType.TEXT_DELTA, text: textDelta })
             }
-
+            console.log('choice.finish_reasonchoice.finish_reasonchoice.finish_reasonchoice.finish_reason', choice)
             // 在流结束时发送完整文本
             if (!isEmpty(choice.finish_reason)) {
               if (accumulatedText) {
@@ -119,6 +119,8 @@ export const TextChunkMiddleware: CompletionsMiddleware =
                 }
                 controller.enqueue(textCompleteChunk)
               }
+              // 传递原始 SDK chunk,finishReason这个字段其他中间件也会用到
+              controller.enqueue(sdkChunk)
             }
           }
         })

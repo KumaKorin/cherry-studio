@@ -3,14 +3,14 @@
 **目标架构核心组件：**
 
 1.  **`CompletionsParams` (及其他API的Params)：** 定义纯粹的应用层输入参数和回调。
-2.  **`CoreCompletionsRequest` (及其他API的CoreRequest)：** Zod Schema 定义的、标准化的内部核心请求结构。
-3.  **`GenericChunk`：** Zod Schema 定义的、标准化的应用层流式数据块类型。
+2.  **`CoreCompletionsRequest` (及其他API的CoreRequest)：** **TypeScript 类型定义的**、标准化的内部核心请求结构。
+3.  **`Chunk` (基于 `src/renderer/src/types/chunk.ts`)：** **TypeScript 类型定义的**、标准化的应用层流式数据块类型。
 4.  **`ApiClient` 接口：** 定义了特定AI供应商适配层需要提供的能力。
 5.  **`XxxApiClient` 实现类 (如 `OpenAIApiClient`, `GeminiApiClient`)：**
     - 实现 `ApiClient` 接口。
     - 封装SDK实例、API配置。
     - 提供请求转换逻辑 (`CoreRequest` -> `SdkSpecificParams`)。
-    - 提供响应块转换逻辑 (`SdkSpecificRawChunk` -> `GenericChunk[]`)。
+    - 提供响应块转换逻辑 (`SdkSpecificRawChunk` -> `Chunk[]`)。
     - 提供其他特定于Provider的辅助方法。
 6.  **`ApiClientFactory`：** 根据配置创建对应的 `XxxApiClient` 实例。
 7.  **`AiCompletionService` (或其他业务服务类)：**
@@ -20,16 +20,17 @@
     - **编排和执行中间件链。**
 8.  **中间件链 (由 `AiCompletionService` 管理)：**
     - **请求阶段：** `Logging` -> `AbortHandler` -> `TransformCoreToSdkParams` (使用 `ApiClient` 的请求转换器) -> `RequestExecution` (使用 `ApiClient` 获取SDK实例并调用API)。
-    - **响应阶段：** `StreamAdapter` (原始SDK流 -> `ReadableStream<RawSdkChunk>`) -> `SdkChunkToGenericChunk` (使用 `ApiClient` 的响应转换器将 `RawSdkChunk` -> `GenericChunk`) -> 通用处理器 (`Think`, `Text`, `Tool`, `WebSearch` 等，消费 `GenericChunk`) -> `FinalChunkConsumerAndNotifier` (调用 `onChunk`) -> `Logging` -> `ErrorHandling`。
+    - **响应阶段：** `StreamAdapter` (原始SDK流 -> `ReadableStream<RawSdkChunk>`) -> `RawSdkChunkToAppChunkMiddleware` (使用 `ApiClient` 的响应转换器将 `RawSdkChunk` -> `Chunk` 流) -> 通用处理器 (`ThinkChunkMiddleware`, `TextChunkMiddleware`, `McpToolChunkMiddleware`, `WebSearchMiddleware` 等，消费 `Chunk` 流) -> `FinalChunkConsumerAndNotifier` (调用 `onChunk`) -> `Logging` -> `ErrorHandling`。
+      - **注：`RawSdkChunk`** 指的是特定AI提供商SDK在流式响应中返回的、未经应用层统一处理的原始数据块格式 (例如 OpenAI 的 `ChatCompletionChunk`，Gemini 的 `GenerateContentResponse` 中的部分等)。
 
 **迁移步骤：**
 
 **Phase 0: 准备工作和类型定义**
 
-1.  **定义核心数据结构 (Zod Schemas)：**
-    - `CoreCompletionsRequestSchema`：定义应用内部统一的对话请求结构。
-    - `GenericChunkSchema`：定义所有可能的通用Chunk类型 (`TEXT_DELTA`, `THINKING_COMPLETE`, `MCP_TOOL_CALL_REQUEST`, `LLM_WEB_SEARCH_COMPLETE` 等)。
-    - 为其他API（翻译、总结）定义类似的 `CoreXxxRequestSchema` (如果它们与 `CoreCompletionsRequestSchema` 差异较大)。
+1.  **定义核心数据结构 (TypeScript 类型)：**
+    - `CoreCompletionsRequest` (Type)：定义应用内部统一的对话请求结构。
+    - `Chunk` (Type - 检查并按需扩展现有 `src/renderer/src/types/chunk.ts`)：定义所有可能的通用Chunk类型 (`TEXT_DELTA`, `THINKING_COMPLETE`, `MCP_TOOL_CALL_REQUEST`, `LLM_WEB_SEARCH_COMPLETE` 等)。
+    - 为其他API（翻译、总结）定义类似的 `CoreXxxRequest` (Type) (如果它们与 `CoreCompletionsRequest` 差异较大)。
 2.  **定义 `ApiClient` 接口：** 明确 `getRequestTransformer`, `getResponseChunkTransformer`, `getSdkInstance` 等核心方法。
 3.  **调整 `AiProviderMiddlewareCompletionsContext`：**
     - 移除 `_providerInstance` (如果它指向旧的 `BaseProvider`)。
@@ -41,13 +42,13 @@
 1.  **创建 `OpenAIApiClient` 类：** 实现 `ApiClient` 接口。
 2.  **迁移SDK实例和配置：** 将原 `OpenAIProvider` 的构造函数中关于API Key、Host、SDK初始化的逻辑移入 `OpenAIApiClient` 的构造函数和 `getSdkInstance` 方法。
 3.  **实现 `getRequestTransformer()`：**
-    - 创建一个 `transformCoreToOpenAISdkParams` 函数（可以放在 `openaiSchemas.ts` 或 `OpenAIApiClient` 内部）。
-    - 此函数接收 `CoreCompletionsRequest` 和 `Assistant`，输出符合OpenAI SDK要求的参数对象 (并用 `OpenAISdkParamsZodSchema` 校验)。
+    - 创建一个 `transformCoreToOpenAISdkParams` 函数（可以放在 `openaiTypes.ts` 或 `OpenAIApiClient` 内部）。
+    - 此函数接收 `CoreCompletionsRequest` 和 `Assistant`，输出符合OpenAI SDK要求的参数对象。
     - 将原 `OpenAIProvider.completions` 方法中构建 `reqMessages`, `tools`, `systemMessage`, `temperature` 等的逻辑迁移到此。
     - 原 `OpenAIProvider.getMessageParam` 的核心逻辑会被这个转换函数调用。
 4.  **实现 `getResponseChunkTransformer()`：**
-    - 此函数接收 `OpenAI.Chat.Completions.ChatCompletionChunk` 和 `Context`，输出 `GenericChunk[] | null`。
-    - 将原 `OpenAIProvider.completions` 方法中 `processStream` (或 `extractReasoningMiddleware` 的类似逻辑) 里解析OpenAI原始块并生成应用层Chunk的逻辑迁移到此。
+    - 此函数接收 `OpenAI.Chat.Completions.ChatCompletionChunk` (或其他SDK的原始块) 和 `Context`，输出 `Chunk[] | null`。
+    - 将原 `OpenAIProvider.completions` 方法中 `processStream` (或 `extractReasoningMiddleware` 的类似逻辑) 里解析OpenAI原始块并生成应用层标准化 `Chunk` 对象的逻辑迁移到此。
       - 识别 `delta.content` -> `TextDeltaChunk`。
       - 识别 `delta.reasoning_content` -> `ThinkingDeltaChunk`。
       - 识别 `delta.tool_calls` -> `McpToolCallRequestChunk`。
@@ -74,12 +75,12 @@
       - 返回包含原始SDK响应/流的结果对象 (如 `{ stream: sdkStream }`)。
     - **`StreamAdapterMiddleware` (调整输入)：**
       - 输入是 `RequestExecutionMiddleware` 返回的原始SDK流。
-      - 输出是 `ReadableStream<OpenAI.Chat.Completions.ChatCompletionChunk>` (对于OpenAI)。
-    - **`SdkChunkToGenericChunkMiddleware` (新)：**
+      - 输出是 `ReadableStream<OpenAI.Chat.Completions.ChatCompletionChunk>` (对于OpenAI，或其他SDK的原始块类型)。
+    - **`RawSdkChunkToAppChunkMiddleware` (新 - 原 `SdkChunkToGenericChunkMiddleware`)：**
       - 从 `context._apiClientInstance` 获取 `getResponseChunkTransformer()`。
-      - 将 `ReadableStream<OpenAI.Chat.Completions.ChatCompletionChunk>` 转换为 `ReadableStream<GenericChunk>`。
+      - 将 `ReadableStream<OpenAI.Chat.Completions.ChatCompletionChunk>` (或其他SDK的原始块流) 转换为 `ReadableStream<Chunk>`，其内部实现会遍历原始块流，对每个原始块调用 `getResponseChunkTransformer`，并将返回的 `Chunk[]` 逐个推入新的流。
 4.  **调整通用中间件：**
-    - `ThinkChunkMiddleware`, `TextChunkMiddleware`, `McpToolChunkMiddleware`, `WebSearchMiddleware`：确保它们现在消费的是 `ReadableStream<GenericChunk>`，并且内部不再有特定于Provider的解析逻辑。它们的职责是基于标准化的 `GenericChunk` 进行状态管理和逻辑处理（如累积、判断完成、执行工具等）。
+    - `ThinkChunkMiddleware`, `TextChunkMiddleware`, `McpToolChunkMiddleware`, `WebSearchMiddleware`：确保它们现在消费的是 `ReadableStream<Chunk>`，并且内部不再有特定于Provider的解析逻辑。它们的职责是基于标准化的 `Chunk` 进行状态管理和逻辑处理（如累积、判断完成、执行工具等）。
     - `McpToolChunkMiddleware` 在执行工具后，需要调用 `context._apiClientInstance.convertMcpToolResponseToSdkMessage()` 来准备递归调用时发送给SDK的工具响应消息。
     - `FinalChunkConsumerAndNotifierMiddleware`, `LoggingMiddleware`, `AbortHandlerMiddleware`, `ErrorMiddleware`：这些通常改动较小，主要是确保它们能正确地从新的 `Context` 中获取所需信息 (如 `onChunkCallback`, `abortController`)。
 
@@ -93,9 +94,9 @@
 
 1.  重复 Phase 1 的步骤为 Gemini 创建 `GeminiApiClient`。
     - 实现其 `getRequestTransformer()`，包含构建Gemini特有的 `history`, `lastMessageContent`, `generateContentConfig` 的逻辑。
-    - 实现其 `getResponseChunkTransformer()`，包含解析Gemini `GenerateContentResponse` 中 `part.text`, `part.thought`, `part.functionCall`, `groundingMetadata` 等并生成 `GenericChunk` 的逻辑。
+    - 实现其 `getResponseChunkTransformer()`，包含解析Gemini `GenerateContentResponse` 中 `part.text`, `part.thought`, `part.functionCall`, `groundingMetadata` 等并生成标准化的 `Chunk` 对象的逻辑。
 2.  `ApiClientFactory` 中添加创建 `GeminiApiClient` 的分支。
-3.  `AiCompletionService` 和核心中间件链应该不需要大的改动，因为它们是基于通用的 `ApiClient` 接口和 `GenericChunk` 工作的。
+3.  `AiCompletionService` 和核心中间件链应该不需要大的改动，因为它们是基于通用的 `ApiClient` 接口和标准化的 `Chunk` 类型工作的。
 
 **Phase 5: 迁移其他API (如翻译、总结)**
 
@@ -112,6 +113,6 @@
   - 为每个 `XxxApiClient` 的转换函数编写单元测试。
   - 为每个核心中间件编写单元测试（可以mock `ApiClient` 的行为）。
   - 为 `AiCompletionService` 的端到端流程编写集成测试。
-- **类型定义的演进：** 随着迁移的进行，你可能会发现需要调整 `CoreRequest`, `GenericChunk`, `ApiClient` 接口等核心类型定义，使其更通用或更精确。
+- **类型定义的演进：** 随着迁移的进行，你可能会发现需要调整 `CoreRequest`, `Chunk`, `ApiClient` 接口等核心类型定义，使其更通用或更精确。
 - **向后兼容性 (如果需要)：** 如果需要在迁移过程中保持旧API的可用性，可能需要一些临时的适配器或开关。
 - **团队沟通：** 确保团队成员理解新的架构设计和各个组件的职责。

@@ -1,4 +1,4 @@
-import { Assistant, MCPTool, Model } from '@renderer/types'
+import { Assistant, MCPTool, Metrics, Model, Usage } from '@renderer/types'
 import { Chunk, ErrorChunk } from '@renderer/types/chunk'
 import { Message } from '@renderer/types/newMessage'
 
@@ -78,6 +78,12 @@ export interface AiProviderMiddlewareCompletionsContext extends AiProviderMiddle
     // Current recursion depth
     // 当前递归深度
     recursionDepth?: number
+    // Accumulated usage data for the current call chain
+    // 当前调用链的累计usage数据
+    accumulatedUsage?: Usage
+    // Accumulated metrics data for the current call chain
+    // 当前调用链的累计metrics数据
+    accumulatedMetrics?: Metrics
     // Add other internal fields as needed
     // 根据需要添加其他内部字段
     [key: string]: any

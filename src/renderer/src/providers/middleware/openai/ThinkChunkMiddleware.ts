@@ -229,6 +229,8 @@ export const ThinkChunkMiddleware: CompletionsMiddleware =
                 thinking_millsec: Date.now() - timeFirstTokenMillsec
               }
               controller.enqueue(thinkingCompleteChunk)
+              // 传递原始 SDK chunk,finishReason这个字段其他中间件也会用到
+              controller.enqueue(sdkChunk)
             }
 
             // 清理 reasoning 字段后传递给下游

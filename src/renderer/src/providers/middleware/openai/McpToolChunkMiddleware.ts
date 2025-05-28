@@ -46,9 +46,6 @@ export const McpToolChunkMiddleware: CompletionsMiddleware = () => (next) => asy
     let result: CompletionsOpenAIResult
 
     if (depth === 0) {
-      // 第一次调用，保持 isRecursiveCall = false（或不设置）
-      console.log(`🔧 [${MIDDLEWARE_NAME}] Initial call (depth=0), keeping isRecursiveCall = false`)
-
       // 第一次调用，使用正常的中间件链
       result = await next(context, currentParams)
     } else {
@@ -57,13 +54,6 @@ export const McpToolChunkMiddleware: CompletionsMiddleware = () => (next) => asy
       if (!enhancedDispatch) {
         throw new Error('Enhanced dispatch function not found in context._internal')
       }
-
-      console.log(`🔧 [${MIDDLEWARE_NAME}] Using enhanced dispatch for recursive call at depth ${depth}`)
-      console.log(`🔧 [${MIDDLEWARE_NAME}] Current context state:`, {
-        isRecursive: context._internal?.isRecursiveCall,
-        depth: context._internal?.recursionDepth
-      })
-
       // 创建新的上下文对象用于递归调用
       context._internal!.isRecursiveCall = true
       context._internal!.recursionDepth = depth
@@ -186,11 +176,11 @@ function createToolHandlingTransform(
 
           // 2. 只有在有工具结果时才递归（对应旧逻辑的 processToolResults）
           if (toolResults.length > 0) {
-            console.log(`🔧 [${MIDDLEWARE_NAME}] Found ${toolResults.length} tool results, starting recursion`)
+            // console.log(`🔧 [${MIDDLEWARE_NAME}] Found ${toolResults.length} tool results, starting recursion`)
 
             // 注意：递归标记已经在transform阶段设置了，这里不需要重复设置
-            console.log(`🔧 [${MIDDLEWARE_NAME}] Flush阶段 - Context state:`, context._internal)
-            console.log(`🔧 [${MIDDLEWARE_NAME}] 递归标记应该已在transform阶段设置`)
+            // console.log(`🔧 [${MIDDLEWARE_NAME}] Flush阶段 - Context state:`, context._internal)
+            // console.log(`🔧 [${MIDDLEWARE_NAME}] 递归标记应该已在transform阶段设置`)
 
             // 构建包含工具结果的新参数
             const newParams = buildParamsWithToolResults(currentParams, toolResults, assistantContent, toolCalls)
@@ -205,18 +195,16 @@ function createToolHandlingTransform(
             //   controller.enqueue(value) // 推送新流的数据
             // }
             // console.log(`🔧 [${MIDDLEWARE_NAME}] Recursive call completed, result has stream: ${!!nextResult.stream}`)
-          } else {
-            console.log(`🔧 [${MIDDLEWARE_NAME}] ❌ No tool results found, ending processing`)
           }
         }
 
         console.log(`🔧 [${MIDDLEWARE_NAME}] Completed processing at depth ${depth}`)
 
         // 在最外层处理完成时重置递归标记
-        console.log(`🔧 [${MIDDLEWARE_NAME}] 🔄 重置递归标记 - 顶层处理完成`)
+        // console.log(`🔧 [${MIDDLEWARE_NAME}] 🔄 重置递归标记 - 顶层处理完成`)
         context._internal.isRecursiveCall = false
         context._internal.recursionDepth = 0
-        console.log(`🔧 [${MIDDLEWARE_NAME}] 递归标记已重置:`, context._internal)
+        // console.log(`🔧 [${MIDDLEWARE_NAME}] 递归标记已重置:`, context._internal)
       } catch (error) {
         console.error(`🔧 [${MIDDLEWARE_NAME}] Error in flush at depth ${depth}:`, error)
 
