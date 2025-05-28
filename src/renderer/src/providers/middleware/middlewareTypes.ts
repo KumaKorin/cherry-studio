@@ -4,6 +4,7 @@ import { Message } from '@renderer/types/newMessage'
 
 import { CompletionsOpenAIResult, CompletionsParams, OnFilterMessagesFunction } from '../AiProvider'
 import type BaseProvider from '../AiProvider/BaseProvider'
+import { ApiClient } from '../AiProvider/clients/'
 
 /**
  * Symbol to uniquely identify middleware context objects. /
@@ -29,6 +30,9 @@ export interface AiProviderMiddlewareBaseContext {
   originalArgs: any[] // The original arguments array passed to the method / 传递给方法的原始参数数组
   providerId?: string // ID of the provider being wrapped / 被包装的提供者的ID
   _providerInstance?: BaseProvider // Reference to the original provider instance. / 对原始提供者实例的引用。
+
+  // 新架构支持
+  _apiClientInstance?: ApiClient<any, any, any> // Reference to the ApiClient instance / 对ApiClient实例的引用
 }
 
 /**
@@ -37,6 +41,7 @@ export interface AiProviderMiddlewareBaseContext {
  */
 export interface AiProviderMiddlewareCompletionsContext extends AiProviderMiddlewareBaseContext {
   methodName: 'completions' // Override for specificity / 覆盖以提高特异性
+
   // Fields derived from originalParams for convenience within completions middlewares. /
   // 从 originalParams派生的字段，方便在 completions 中间件中使用。
   // These will be populated by a context creation function. /
@@ -91,6 +96,7 @@ export interface MiddlewareAPI<
   getOriginalArgs: () => Args // Function to get the original arguments of the method call / 获取方法调用原始参数的函数
   getProviderId: () => string | undefined // Function to get the provider ID / 获取提供者ID的函数
   getProviderInstance: () => BaseProvider // Function to get the original provider instance / 获取原始提供者实例的函数
+  getApiClientInstance: () => ApiClient<any, any, any> | undefined // Function to get the ApiClient instance / 获取ApiClient实例的函数
 }
 
 /**

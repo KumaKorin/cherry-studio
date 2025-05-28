@@ -1,0 +1,302 @@
+import { isFunctionCallingModel, isNotSupportTemperatureAndTopP } from '@renderer/config/models'
+import { REFERENCE_PROMPT } from '@renderer/config/prompts'
+import { getLMStudioKeepAliveTime } from '@renderer/hooks/useLMStudio'
+import {
+  Assistant,
+  FileTypes,
+  KnowledgeReference,
+  MCPTool,
+  Provider,
+  WebSearchProviderResponse,
+  WebSearchResponse
+} from '@renderer/types'
+import { Model } from '@renderer/types'
+import { Message } from '@renderer/types/newMessage'
+import { addAbortController, removeAbortController } from '@renderer/utils/abortController'
+import { formatApiHost } from '@renderer/utils/api'
+import { isJSON, parseJSON } from '@renderer/utils/json'
+import { findFileBlocks, getMainTextContent } from '@renderer/utils/messageUtils/find'
+import Logger from 'electron-log/renderer'
+import { isEmpty } from 'lodash'
+
+import { ApiClient, RequestTransformer, ResponseChunkTransformer } from './types'
+
+/**
+ * Abstract base class for API clients.
+ * Provides common functionality and structure for specific client implementations.
+ */
+export abstract class BaseApiClient<TSdkInstance = any, TSdkParams = any, TRawChunk = any, TResponseContext = any>
+  implements ApiClient<TSdkInstance, TSdkParams, TRawChunk, TResponseContext>
+{
+  private static readonly SYSTEM_PROMPT_THRESHOLD: number = 128
+  public provider: Provider
+  protected host: string
+  protected apiKey: string
+  protected sdkInstance?: TSdkInstance
+  public useSystemPromptForTools: boolean = true
+
+  constructor(provider: Provider) {
+    this.provider = provider
+    this.host = this.getBaseURL()
+    this.apiKey = this.getApiKey()
+  }
+
+  abstract getSdkInstance(): Promise<TSdkInstance> | TSdkInstance
+  abstract getRequestTransformer(): RequestTransformer<TSdkParams>
+  abstract getResponseChunkTransformer(): ResponseChunkTransformer<TRawChunk, TResponseContext>
+
+  // Optional tool conversion methods - implement if needed by the specific provider
+  abstract convertMcpToolsToSdkTools<T>(mcpTools: MCPTool[]): T[]
+
+  convertSdkToolCallToMcp?(toolCall: any, mcpTools?: any[]): any {
+    console.warn(`convertSdkToolCallToMcp not implemented for provider: ${this.provider.id}`, toolCall, mcpTools)
+    return toolCall // Default pass-through
+  }
+
+  convertMcpToolResponseToSdkMessage?(mcpToolResponse: any, resp: any, model: Model): any {
+    console.warn(
+      `convertMcpToolResponseToSdkMessage not implemented for provider: ${this.provider.id}`,
+      mcpToolResponse,
+      resp,
+      model
+    )
+    return mcpToolResponse // Default pass-through
+  }
+
+  public defaultHeaders() {
+    return {
+      'HTTP-Referer': 'https://cherry-ai.com',
+      'X-Title': 'Cherry Studio',
+      'X-Api-Key': this.apiKey
+    }
+  }
+
+  public getBaseURL(): string {
+    const host = this.provider.apiHost
+    return formatApiHost(host)
+  }
+
+  public getApiKey() {
+    const keys = this.provider.apiKey.split(',').map((key) => key.trim())
+    const keyName = `provider:${this.provider.id}:last_used_key`
+
+    if (keys.length === 1) {
+      return keys[0]
+    }
+
+    const lastUsedKey = window.keyv.get(keyName)
+    if (!lastUsedKey) {
+      window.keyv.set(keyName, keys[0])
+      return keys[0]
+    }
+
+    const currentIndex = keys.indexOf(lastUsedKey)
+    const nextIndex = (currentIndex + 1) % keys.length
+    const nextKey = keys[nextIndex]
+    window.keyv.set(keyName, nextKey)
+
+    return nextKey
+  }
+
+  public get keepAliveTime() {
+    return this.provider.id === 'lmstudio' ? getLMStudioKeepAliveTime() : undefined
+  }
+
+  public getTemperature(assistant: Assistant, model: Model): number | undefined {
+    return isNotSupportTemperatureAndTopP(model) ? undefined : assistant.settings?.temperature
+  }
+
+  public getTopP(assistant: Assistant, model: Model): number | undefined {
+    return isNotSupportTemperatureAndTopP(model) ? undefined : assistant.settings?.topP
+  }
+
+  public async getMessageContent(message: Message): Promise<string> {
+    const content = getMainTextContent(message)
+    if (isEmpty(content)) {
+      return ''
+    }
+
+    const webSearchReferences = await this.getWebSearchReferencesFromCache(message)
+    const knowledgeReferences = await this.getKnowledgeBaseReferencesFromCache(message)
+
+    // 添加偏移量以避免ID冲突
+    const reindexedKnowledgeReferences = knowledgeReferences.map((ref) => ({
+      ...ref,
+      id: ref.id + webSearchReferences.length // 为知识库引用的ID添加网络搜索引用的数量作为偏移量
+    }))
+
+    const allReferences = [...webSearchReferences, ...reindexedKnowledgeReferences]
+
+    Logger.log(`Found ${allReferences.length} references for ID: ${message.id}`, allReferences)
+
+    if (!isEmpty(allReferences)) {
+      const referenceContent = `\`\`\`json\n${JSON.stringify(allReferences, null, 2)}\n\`\`\``
+      return REFERENCE_PROMPT.replace('{question}', content).replace('{references}', referenceContent)
+    }
+
+    return content
+  }
+
+  /**
+   * Extract the file content from the message
+   * @param message - The message
+   * @returns The file content
+   */
+  protected async extractFileContent(message: Message) {
+    const fileBlocks = findFileBlocks(message)
+    if (fileBlocks.length > 0) {
+      const textFileBlocks = fileBlocks.filter(
+        (fb) => fb.file && [FileTypes.TEXT, FileTypes.DOCUMENT].includes(fb.file.type)
+      )
+
+      if (textFileBlocks.length > 0) {
+        let text = ''
+        const divider = '\n\n---\n\n'
+
+        for (const fileBlock of textFileBlocks) {
+          const file = fileBlock.file
+          const fileContent = (await window.api.file.read(file.id + file.ext)).trim()
+          const fileNameRow = 'file: ' + file.origin_name + '\n\n'
+          text = text + fileNameRow + fileContent + divider
+        }
+
+        return text
+      }
+    }
+
+    return ''
+  }
+
+  private async getWebSearchReferencesFromCache(message: Message) {
+    const content = getMainTextContent(message)
+    if (isEmpty(content)) {
+      return []
+    }
+    const webSearch: WebSearchResponse = window.keyv.get(`web-search-${message.id}`)
+
+    if (webSearch) {
+      return (webSearch.results as WebSearchProviderResponse).results.map(
+        (result, index) =>
+          ({
+            id: index + 1,
+            content: result.content,
+            sourceUrl: result.url,
+            type: 'url'
+          }) as KnowledgeReference
+      )
+    }
+
+    return []
+  }
+
+  /**
+   * 从缓存中获取知识库引用
+   */
+  private async getKnowledgeBaseReferencesFromCache(message: Message): Promise<KnowledgeReference[]> {
+    const content = getMainTextContent(message)
+    if (isEmpty(content)) {
+      return []
+    }
+    const knowledgeReferences: KnowledgeReference[] = window.keyv.get(`knowledge-search-${message.id}`)
+
+    if (!isEmpty(knowledgeReferences)) {
+      // Logger.log(`Found ${knowledgeReferences.length} knowledge base references in cache for ID: ${message.id}`)
+      return knowledgeReferences
+    }
+    // Logger.log(`No knowledge base references found in cache for ID: ${message.id}`)
+    return []
+  }
+
+  protected getCustomParameters(assistant: Assistant) {
+    return (
+      assistant?.settings?.customParameters?.reduce((acc, param) => {
+        if (!param.name?.trim()) {
+          return acc
+        }
+        if (param.type === 'json') {
+          const value = param.value as string
+          if (value === 'undefined') {
+            return { ...acc, [param.name]: undefined }
+          }
+          return { ...acc, [param.name]: isJSON(value) ? parseJSON(value) : value }
+        }
+        return {
+          ...acc,
+          [param.name]: param.value
+        }
+      }, {}) || {}
+    )
+  }
+
+  public createAbortController(messageId?: string, isAddEventListener?: boolean) {
+    const abortController = new AbortController()
+    const abortFn = () => abortController.abort()
+
+    if (messageId) {
+      addAbortController(messageId, abortFn)
+    }
+
+    const cleanup = () => {
+      if (messageId) {
+        signalPromise.resolve?.(undefined)
+        removeAbortController(messageId, abortFn)
+      }
+    }
+    const signalPromise: {
+      resolve: (value: unknown) => void
+      promise: Promise<unknown>
+    } = {
+      resolve: () => {},
+      promise: Promise.resolve()
+    }
+
+    if (isAddEventListener) {
+      signalPromise.promise = new Promise((resolve, reject) => {
+        signalPromise.resolve = resolve
+        if (abortController.signal.aborted) {
+          reject(new Error('Request was aborted.'))
+        }
+        // 捕获abort事件,有些abort事件必须
+        abortController.signal.addEventListener('abort', () => {
+          reject(new Error('Request was aborted.'))
+        })
+      })
+      return {
+        abortController,
+        cleanup,
+        signalPromise
+      }
+    }
+    return {
+      abortController,
+      cleanup
+    }
+  }
+
+  // Setup tools configuration based on provided parameters
+  public setupToolsConfig<T>(params: { mcpTools?: MCPTool[]; model: Model; enableToolUse?: boolean }): {
+    tools: T[]
+  } {
+    const { mcpTools, model, enableToolUse } = params
+    let tools: T[] = []
+
+    // If there are no tools, return an empty array
+    if (!mcpTools?.length) {
+      return { tools }
+    }
+
+    // If the number of tools exceeds the threshold, use the system prompt
+    if (mcpTools.length > BaseApiClient.SYSTEM_PROMPT_THRESHOLD) {
+      this.useSystemPromptForTools = true
+      return { tools }
+    }
+
+    // If the model supports function calling and tool usage is enabled
+    if (isFunctionCallingModel(model) && enableToolUse) {
+      tools = this.convertMcpToolsToSdkTools(mcpTools)
+      this.useSystemPromptForTools = false
+    }
+
+    return { tools }
+  }
+}
