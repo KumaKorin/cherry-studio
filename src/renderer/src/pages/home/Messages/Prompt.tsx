@@ -1,7 +1,8 @@
 import { useTheme } from '@renderer/context/ThemeProvider'
 import AssistantSettingsPopup from '@renderer/pages/settings/AssistantSettings'
 import { Assistant, Topic } from '@renderer/types'
-import { FC } from 'react'
+import { promptVariableReplacer } from '@renderer/utils/prompt'
+import { FC, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -13,10 +14,21 @@ interface Props {
 const Prompt: FC<Props> = ({ assistant, topic }) => {
   const { t } = useTranslation()
   const { theme } = useTheme()
+  const [processedPrompt, setProcessedPrompt] = useState('')
 
   const prompt = assistant.prompt || t('chat.default.description')
   const topicPrompt = topic?.prompt || ''
   const isDark = theme === 'dark'
+
+  useEffect(() => {
+    const processPrompt = async () => {
+      if (prompt) {
+        const processed = await promptVariableReplacer(prompt)
+        setProcessedPrompt(processed)
+      }
+    }
+    processPrompt()
+  }, [prompt])
 
   if (!prompt && !topicPrompt) {
     return null
@@ -24,7 +36,7 @@ const Prompt: FC<Props> = ({ assistant, topic }) => {
 
   return (
     <Container className="system-prompt" onClick={() => AssistantSettingsPopup.show({ assistant })} $isDark={isDark}>
-      <Text>{prompt}</Text>
+      <Text>{processedPrompt || prompt}</Text>
     </Container>
   )
 }

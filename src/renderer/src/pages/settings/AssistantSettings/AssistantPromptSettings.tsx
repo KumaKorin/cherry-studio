@@ -6,6 +6,7 @@ import { Box, HSpaceBetweenStack, HStack } from '@renderer/components/Layout'
 import { estimateTextTokens } from '@renderer/services/TokenService'
 import { Assistant, AssistantSettings } from '@renderer/types'
 import { getLeadingEmoji } from '@renderer/utils'
+import { promptVariableReplacer } from '@renderer/utils/prompt'
 import { Button, Input, Popover, Tooltip } from 'antd'
 import TextArea from 'antd/es/input/TextArea'
 import { useEffect, useState } from 'react'
@@ -27,13 +28,22 @@ const AssistantPromptSettings: React.FC<Props> = ({ assistant, updateAssistant }
   const [tokenCount, setTokenCount] = useState(0)
   const { t } = useTranslation()
   const [showMarkdown, setShowMarkdown] = useState(prompt.length > 0)
+  const [processedPrompt, setProcessedPrompt] = useState('')
 
   useEffect(() => {
     const updateTokenCount = async () => {
       const count = await estimateTextTokens(prompt)
       setTokenCount(count)
     }
+
+    // 替换系统提示词的变量
+    const processPrompt = async () => {
+      const processed = await promptVariableReplacer(prompt)
+      setProcessedPrompt(processed)
+    }
+
     updateTokenCount()
+    processPrompt()
   }, [prompt])
 
   const onUpdate = () => {
@@ -99,7 +109,7 @@ const AssistantPromptSettings: React.FC<Props> = ({ assistant, updateAssistant }
       <TextAreaContainer>
         {showMarkdown ? (
           <MarkdownContainer onClick={() => setShowMarkdown(false)}>
-            <ReactMarkdown className="markdown">{prompt}</ReactMarkdown>
+            <ReactMarkdown className="markdown">{processedPrompt}</ReactMarkdown>
             <div style={{ height: '30px' }} />
           </MarkdownContainer>
         ) : (
