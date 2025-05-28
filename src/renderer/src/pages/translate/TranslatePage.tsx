@@ -16,8 +16,7 @@ import {
   createInputScrollHandler,
   createOutputScrollHandler,
   detectLanguage,
-  getTargetLanguageForBidirectional,
-  isLanguageInPair
+  determineTargetLanguage
 } from '@renderer/utils/translate'
 import { Button, Empty, Flex, Modal, Popconfirm, Select, Space, Switch, Tooltip } from 'antd'
 import TextArea, { TextAreaRef } from 'antd/es/input/TextArea'
@@ -290,30 +289,26 @@ const TranslatePage: FC = () => {
     setLoading(true)
     try {
       const sourceLanguage = await detectLanguage(text)
-      console.log('检测到的源语言:', sourceLanguage)
+      const result = determineTargetLanguage(sourceLanguage, targetLanguage, isBidirectional, bidirectionalPair)
+      if (!result.success) {
+        let errorMessage = ''
+        if (result.errorType === 'same_language') {
+          errorMessage = t('translate.language.same')
+        } else if (result.errorType === 'not_in_pair') {
+          errorMessage = t('translate.language.not_pair')
+        }
 
-      let actualTargetLanguage = targetLanguage
+        window.message.warning({
+          content: errorMessage,
+          key: 'translate-message'
+        })
+        setLoading(false)
+        return
+      }
 
+      const actualTargetLanguage = result.language as string
       if (isBidirectional) {
-        if (!isLanguageInPair(sourceLanguage, bidirectionalPair)) {
-          window.message.warning({
-            content: t('translate.language.not_pair'),
-            key: 'translate-message'
-          })
-          setLoading(false)
-          return
-        }
-        actualTargetLanguage = getTargetLanguageForBidirectional(sourceLanguage, bidirectionalPair)
         setTargetLanguage(actualTargetLanguage)
-      } else {
-        if (sourceLanguage === targetLanguage) {
-          window.message.warning({
-            content: t('translate.language.same'),
-            key: 'translate-message'
-          })
-          setLoading(false)
-          return
-        }
       }
 
       const assistant = getDefaultTranslateAssistant(actualTargetLanguage, text)
