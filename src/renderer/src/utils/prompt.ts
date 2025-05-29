@@ -212,6 +212,21 @@ export const promptVariableReplacer = async (userSystemPrompt: string): Promise<
   return userSystemPrompt
 }
 
+export const supportedVariables = [
+  '{{username}}',
+  '{{date}}',
+  '{{time}}',
+  '{{datetime}}',
+  '{{system}}',
+  '{{language}}',
+  '{{arch}}',
+  '{{model_name}}'
+]
+
+export const containsSupportedVariables = (userSystemPrompt: string): boolean => {
+  return supportedVariables.some((variable) => userSystemPrompt.includes(variable))
+}
+
 export const buildSystemPrompt = async (userSystemPrompt: string, tools?: MCPTool[]): Promise<string> => {
   if (typeof userSystemPrompt === 'string') {
     userSystemPrompt = await promptVariableReplacer(userSystemPrompt)
