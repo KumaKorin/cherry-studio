@@ -15,7 +15,6 @@ export function usePromptProcessor({ prompt }: { prompt: string }) {
         if (prompt && promptShowVariableReplacement && containsSupportedVariables(prompt)) {
           const result = await promptVariableReplacer(prompt)
           setProcessedPrompt(result)
-          console.log('执行了一次更新')
         } else {
           setProcessedPrompt(prompt)
         }
