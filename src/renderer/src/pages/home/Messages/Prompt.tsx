@@ -1,8 +1,8 @@
 import { useTheme } from '@renderer/context/ThemeProvider'
+import { usePromptProcessor } from '@renderer/hooks/usePromptProcessor'
 import AssistantSettingsPopup from '@renderer/pages/settings/AssistantSettings'
 import { Assistant, Topic } from '@renderer/types'
-import { promptVariableReplacer } from '@renderer/utils/prompt'
-import { FC, useEffect, useState } from 'react'
+import { FC } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -14,21 +14,12 @@ interface Props {
 const Prompt: FC<Props> = ({ assistant, topic }) => {
   const { t } = useTranslation()
   const { theme } = useTheme()
-  const [processedPrompt, setProcessedPrompt] = useState('')
 
   const prompt = assistant.prompt || t('chat.default.description')
   const topicPrompt = topic?.prompt || ''
   const isDark = theme === 'dark'
 
-  useEffect(() => {
-    const processPrompt = async () => {
-      if (prompt) {
-        const processed = await promptVariableReplacer(prompt)
-        setProcessedPrompt(processed)
-      }
-    }
-    processPrompt()
-  }, [prompt])
+  const processedPrompt = usePromptProcessor({ prompt })
 
   if (!prompt && !topicPrompt) {
     return null

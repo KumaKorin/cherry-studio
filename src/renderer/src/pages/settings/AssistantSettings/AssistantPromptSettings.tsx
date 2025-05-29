@@ -3,10 +3,10 @@ import 'emoji-picker-element'
 import { CloseCircleFilled, QuestionCircleOutlined } from '@ant-design/icons'
 import EmojiPicker from '@renderer/components/EmojiPicker'
 import { Box, HSpaceBetweenStack, HStack } from '@renderer/components/Layout'
+import { usePromptProcessor } from '@renderer/hooks/usePromptProcessor'
 import { estimateTextTokens } from '@renderer/services/TokenService'
 import { Assistant, AssistantSettings } from '@renderer/types'
 import { getLeadingEmoji } from '@renderer/utils'
-import { promptVariableReplacer } from '@renderer/utils/prompt'
 import { Button, Input, Popover, Tooltip } from 'antd'
 import TextArea from 'antd/es/input/TextArea'
 import { useEffect, useState } from 'react'
@@ -28,23 +28,16 @@ const AssistantPromptSettings: React.FC<Props> = ({ assistant, updateAssistant }
   const [tokenCount, setTokenCount] = useState(0)
   const { t } = useTranslation()
   const [showMarkdown, setShowMarkdown] = useState(prompt.length > 0)
-  const [processedPrompt, setProcessedPrompt] = useState('')
 
   useEffect(() => {
     const updateTokenCount = async () => {
       const count = await estimateTextTokens(prompt)
       setTokenCount(count)
     }
-
-    // 替换系统提示词的变量
-    const processPrompt = async () => {
-      const processed = await promptVariableReplacer(prompt)
-      setProcessedPrompt(processed)
-    }
-
     updateTokenCount()
-    processPrompt()
   }, [prompt])
+
+  const processedPrompt = usePromptProcessor({ prompt })
 
   const onUpdate = () => {
     const _assistant = { ...assistant, name: name.trim(), emoji, prompt }
