@@ -1,4 +1,4 @@
-import { promptVariableReplacer } from '@renderer/utils/prompt'
+import { containsSupportedVariables, promptVariableReplacer } from '@renderer/utils/prompt'
 import { useEffect, useState } from 'react'
 
 import { useSettings } from './useSettings'
@@ -12,7 +12,7 @@ export function usePromptProcessor({ prompt }: { prompt: string }) {
 
     const processPrompt = async () => {
       try {
-        if (prompt && promptShowVariableReplacement) {
+        if (prompt && promptShowVariableReplacement && containsSupportedVariables(prompt)) {
           const result = await promptVariableReplacer(prompt)
           setProcessedPrompt(result)
           console.log('执行了一次更新')
@@ -29,7 +29,7 @@ export function usePromptProcessor({ prompt }: { prompt: string }) {
     processPrompt()
 
     // 设置自动刷新
-    if (promptAutoRefresh && promptRefreshInterval > 0) {
+    if (promptAutoRefresh && promptRefreshInterval > 0 && containsSupportedVariables(prompt)) {
       intervalId = setInterval(processPrompt, promptRefreshInterval * 1000)
     }
 
