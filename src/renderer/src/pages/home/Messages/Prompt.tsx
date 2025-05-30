@@ -19,7 +19,7 @@ const Prompt: FC<Props> = ({ assistant, topic }) => {
   const topicPrompt = topic?.prompt || ''
   const isDark = theme === 'dark'
 
-  const processedPrompt = usePromptProcessor({ prompt })
+  const processedPrompt = usePromptProcessor({ prompt, modelName: assistant.model?.name })
 
   if (!prompt && !topicPrompt) {
     return null

@@ -3,7 +3,12 @@ import { useEffect, useState } from 'react'
 
 import { useSettings } from './useSettings'
 
-export function usePromptProcessor({ prompt }: { prompt: string }) {
+interface PromptProcessor {
+  prompt: string
+  modelName?: string
+}
+
+export function usePromptProcessor({ prompt, modelName }: PromptProcessor): string {
   const { promptAutoRefresh, promptRefreshInterval, promptShowVariableReplacement } = useSettings()
   const [processedPrompt, setProcessedPrompt] = useState('')
 
@@ -13,7 +18,7 @@ export function usePromptProcessor({ prompt }: { prompt: string }) {
     const processPrompt = async () => {
       try {
         if (prompt && promptShowVariableReplacement && containsSupportedVariables(prompt)) {
-          const result = await promptVariableReplacer(prompt)
+          const result = await promptVariableReplacer(prompt, modelName)
           setProcessedPrompt(result)
         } else {
           setProcessedPrompt(prompt)
@@ -38,7 +43,7 @@ export function usePromptProcessor({ prompt }: { prompt: string }) {
         clearInterval(intervalId)
       }
     }
-  }, [prompt, promptAutoRefresh, promptRefreshInterval, promptShowVariableReplacement])
+  }, [prompt, promptAutoRefresh, promptRefreshInterval, promptShowVariableReplacement, modelName])
 
   return processedPrompt
 }

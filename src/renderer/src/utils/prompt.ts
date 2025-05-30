@@ -147,7 +147,7 @@ ${availableTools}
 </tools>`
 }
 
-export const promptVariableReplacer = async (userSystemPrompt: string): Promise<string> => {
+export const promptVariableReplacer = async (userSystemPrompt: string, modelName?: string): Promise<string> => {
   const now = new Date()
   if (userSystemPrompt.includes('{{date}}')) {
     const date = now.toLocaleDateString()
@@ -201,8 +201,8 @@ export const promptVariableReplacer = async (userSystemPrompt: string): Promise<
 
   if (userSystemPrompt.includes('{{model_name}}')) {
     try {
-      const modelName = store.getState().llm.defaultModel.name
-      userSystemPrompt = userSystemPrompt.replace(/{{model_name}}/g, modelName)
+      const name = modelName || store.getState().llm.defaultModel.name
+      userSystemPrompt = userSystemPrompt.replace(/{{model_name}}/g, name)
     } catch (error) {
       console.error('Failed to get model name:', error)
       userSystemPrompt = userSystemPrompt.replace(/{{model_name}}/g, 'Unknown Model')

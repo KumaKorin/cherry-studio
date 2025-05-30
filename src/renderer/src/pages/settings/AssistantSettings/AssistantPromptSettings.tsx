@@ -38,7 +38,10 @@ const AssistantPromptSettings: React.FC<Props> = ({ assistant, updateAssistant }
     updateTokenCount()
   }, [prompt])
 
-  const processedPrompt = usePromptProcessor({ prompt })
+  const processedPrompt = usePromptProcessor({
+    prompt,
+    modelName: assistant.model?.name
+  })
 
   const onUpdate = () => {
     const _assistant = { ...assistant, name: name.trim(), emoji, prompt }

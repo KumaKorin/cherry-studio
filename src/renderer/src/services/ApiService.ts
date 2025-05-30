@@ -295,7 +295,7 @@ export async function fetchChatCompletion({
   if (assistant.prompt) {
     assistant = {
       ...assistant,
-      prompt: await promptVariableReplacer(assistant.prompt)
+      prompt: await promptVariableReplacer(assistant.prompt, assistant.model?.name)
     }
   }
 
