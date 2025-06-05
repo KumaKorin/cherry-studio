@@ -22,7 +22,7 @@ import { Message } from '@renderer/types/newMessage'
 import { isAbortError } from '@renderer/utils/error'
 import { extractInfoFromXML, ExtractResults } from '@renderer/utils/extract'
 import { getKnowledgeBaseIds, getMainTextContent } from '@renderer/utils/messageUtils/find'
-import { promptVariableReplacer } from '@renderer/utils/prompt'
+import { containsSupportedVariables, promptVariableReplacer } from '@renderer/utils/prompt'
 import { findLast, isEmpty } from 'lodash'
 
 import AiProvider from '../providers/AiProvider'
@@ -292,10 +292,12 @@ export async function fetchChatCompletion({
   messages = filterContextMessages(messages)
 
   // 替换 assistant 系统提示词中的变量
-  if (assistant.prompt) {
+  if (assistant.prompt && containsSupportedVariables(assistant.prompt)) {
+    // 预处理 assistant 的系统提示词
+    const processedPrompt = (await promptVariableReplacer(assistant.prompt, assistant.model?.name)) || assistant.prompt
     assistant = {
       ...assistant,
-      prompt: await promptVariableReplacer(assistant.prompt, assistant.model?.name)
+      prompt: processedPrompt
     }
   }
 

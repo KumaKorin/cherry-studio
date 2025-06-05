@@ -1477,6 +1477,9 @@ const migrateConfig = {
   '110': (state: RootState) => {
     try {
       state.settings.showTokens = true
+      state.settings.promptShowVariableReplacement = false
+      state.settings.promptAutoRefresh = false
+      state.settings.promptRefreshInterval = 60
       return state
     } catch (error) {
       return state

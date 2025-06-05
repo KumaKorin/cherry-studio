@@ -180,7 +180,7 @@ const GeneralSettings: FC = () => {
             checked={promptShowVariableReplacement}
             onChange={(v) => {
               dispatch(setPromptShowVariableReplacement(v))
-              window.api.config.set('promptAutoRefresh', v)
+              window.api.config.set('promptShowVariableReplacement', v)
             }}
           />
         </SettingRow>
