@@ -1476,10 +1476,11 @@ const migrateConfig = {
   },
   '110': (state: RootState) => {
     try {
+      if (state.paintings && !state.paintings.tokenFluxPaintings) {
+        state.paintings.tokenFluxPaintings = []
+      }
       state.settings.showTokens = true
-      state.settings.promptShowVariableReplacement = false
-      state.settings.promptAutoRefresh = false
-      state.settings.promptRefreshInterval = 60
+      state.settings.earlyAccess = false
       return state
     } catch (error) {
       return state

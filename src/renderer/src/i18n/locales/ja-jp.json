@@ -952,7 +952,17 @@
       "text_desc_required": "画像の説明を先に入力してください",
       "req_error_text": "実行に失敗しました。もう一度お試しください。プロンプトに「著作権用語」や「センシティブな用語」を含めないでください。",
       "auto_create_paint": "画像を自動作成",
-      "auto_create_paint_tip": "画像が生成された後、自動的に新しい画像が作成されます。"
+      "auto_create_paint_tip": "画像が生成された後、自動的に新しい画像が作成されます。",
+      "select_model": "モデルを選択",
+      "input_parameters": "パラメータ入力",
+      "input_image": "入力画像",
+      "generated_image": "生成画像",
+      "pricing": "料金",
+      "model_and_pricing": "モデルと料金",
+      "per_image": "1枚あたり",
+      "per_images": "複数枚あたり",
+      "required_field": "必須項目",
+      "uploaded_input": "アップロード済みの入力"
     },
     "prompts": {
       "explanation": "この概念を説明してください",
@@ -1120,26 +1130,6 @@
         "markdown_export.show_model_provider.help": "Markdownエクスポート時にモデルプロバイダー（例：OpenAI、Geminiなど）を表示します。",
         "minute_interval_one": "{{count}} 分",
         "minute_interval_other": "{{count}} 分",
-        "notion": {
-          "api_key": "Notion APIキー",
-          "api_key_placeholder": "Notion APIキーを入力してください",
-          "check": {
-            "button": "確認",
-            "empty_api_key": "Api_keyが設定されていません",
-            "empty_database_id": "Database_idが設定されていません",
-            "error": "接続エラー、ネットワーク設定とApi_keyとDatabase_idを確認してください",
-            "fail": "接続エラー、ネットワーク設定とApi_keyとDatabase_idを確認してください",
-            "success": "接続に成功しました。"
-          },
-          "database_id": "Notion データベースID",
-          "database_id_placeholder": "Notion データベースIDを入力してください",
-          "help": "Notion 設定ドキュメント",
-          "page_name_key": "ページタイトルフィールド名",
-          "page_name_key_placeholder": "ページタイトルフィールド名を入力してください。デフォルトは Name です",
-          "title": "Notion 設定",
-          "export_reasoning.title": "エクスポート時に思考チェーンを含める",
-          "export_reasoning.help": "有効にすると、Notionにエクスポートする際に思考チェーンの内容が含まれます。"
-        },
         "title": "データ設定",
         "webdav": {
           "autoSync": "自動バックアップ",
@@ -1259,7 +1249,25 @@
           "new_folder.button": "新しいフォルダー"
         },
         "message_title.use_topic_naming.title": "トピック命名モデルを使用してメッセージのタイトルを作成",
-        "message_title.use_topic_naming.help": "この設定は、すべてのMarkdownエクスポート方法に影響します。"
+        "message_title.use_topic_naming.help": "この設定は、すべてのMarkdownエクスポート方法に影響します。",
+        "notion.api_key": "Notion APIキー",
+        "notion.api_key_placeholder": "Notion APIキーを入力してください",
+        "notion.check": {
+          "button": "確認",
+          "empty_api_key": "Api_keyが設定されていません",
+          "empty_database_id": "Database_idが設定されていません",
+          "error": "接続エラー、ネットワーク設定とApi_keyとDatabase_idを確認してください",
+          "fail": "接続エラー、ネットワーク設定とApi_keyとDatabase_idを確認してください",
+          "success": "接続に成功しました。"
+        },
+        "notion.database_id": "Notion データベースID",
+        "notion.database_id_placeholder": "Notion データベースIDを入力してください",
+        "notion.help": "Notion 設定ドキュメント",
+        "notion.page_name_key": "ページタイトルフィールド名",
+        "notion.page_name_key_placeholder": "ページタイトルフィールド名を入力してください。デフォルトは Name です",
+        "notion.title": "Notion 設定",
+        "notion.export_reasoning.title": "エクスポート時に思考チェーンを含める",
+        "notion.export_reasoning.help": "有効にすると、Notionにエクスポートする際に思考チェーンの内容が含まれます。"
       },
       "display.assistant.title": "アシスタント設定",
       "display.custom.css": "カスタムCSS",
@@ -1750,6 +1758,8 @@
         "content_limit_tooltip": "検索結果の内容長を制限し、制限を超える内容は切り捨てられます。"
       },
       "general.auto_check_update.title": "自動更新",
+      "general.early_access.title": "早期アクセス",
+      "general.early_access.tooltip": "有効にすると、GitHub の最新バージョンを使用します。ダウンロード速度が遅く、不安定な場合があります。データを事前にバックアップしてください。",
       "quickPhrase": {
         "title": "クイックフレーズ",
         "add": "フレーズを追加",
